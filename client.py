@@ -1,5 +1,6 @@
 import asyncio
 from Socket import Socket
+from ex import SocketException
 
 
 class Client(Socket):
@@ -17,13 +18,16 @@ class Client(Socket):
 
     async def listen_socket(self, listened_socket):
         while True:
-            data = await self.main_loop.sock_recv(listened_socket, 4096)
-            print(data.decode('utf-8'))
+            try:
+                self.messages = await super(Client, self).listen_socket(listened_socket)
+            except SocketException:
+                return
+            print(self.messages['message'])
 
     async def send_data(self):
         while True:
             message = await self.main_loop.run_in_executor(None, input, ":::")
-            await super(Client, self).send_data(where=self.socket, data=message.encode('utf-8'))
+            await super(Client, self).send_data(where=self.socket, message=message)
 
     async def main(self):
         await asyncio.gather(
